@@ -26,7 +26,7 @@ jobs:
       # this has to be a global else amplify craps out don't ask.
       # i guess there's probably a way to have yarn not install it if not needed
       # but this is quite a bit faster than using `yarn list --patern amplify`
-      - run: "[ -f ~/.yarn/bin/amplify ] && yarn global add @aws-amplify/cli@multienv || echo 'yarn already globally installed, skipping.'"
+      - run: "[ -f ~/.yarn/bin/amplify ] && echo 'amplify already installed globally, skipping' || yarn global add @aws-amplify/cli@multienv"
       - run: yarn
 
       - save_cache:
