@@ -4,7 +4,13 @@
 #
 version: 2
 jobs:
-  build:
+  deployToStaging:
+    # at first we will deploy everything but really this should be just for
+    # PRs against master; uncomment this.
+    # branches:
+    #   ignore:
+    #     - master
+
     docker:
       - image: circleci/node:10.15.0
 
@@ -20,7 +26,8 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
-      - run: yarn install
+      - run: sudo npm install -g @aws-amplify/cli@multienv
+      - run: npm install
 
       - save_cache:
           paths:
@@ -29,5 +36,3 @@ jobs:
         
       # run tests!
       - run: yarn test
-
-
