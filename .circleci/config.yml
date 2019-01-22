@@ -21,9 +21,9 @@ jobs:
       #     - node-v1-{{ .Branch }}-
       #     - node-v1-
 
-      - run: npm install -g @aws-amplify/cli@multienv
+      - run: sudo npm install -g @aws-amplify/cli@multienv
         # experiment
-      - run: chown -R $USER:$USER /usr/local/lib/node_modules
+      - run: sudo chown -R $USER:$USER /usr/local/lib/node_modules
       - run: npm install --no-audit
 
       - save_cache:
