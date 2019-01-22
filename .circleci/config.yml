@@ -16,7 +16,7 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package.json" }}
+          - v1-dependencies-{{ checksum "package-lock.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
@@ -26,7 +26,10 @@ jobs:
       - save_cache:
           paths:
             - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
+            # capture globally installed amplify CLI...it doesn't work
+            # when executing it locally via node_modules/.bin/amplify so w/e 
+            - ~/usr/local/lib/node_modules
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
       - run: amplify env checkout staging
       - run: amplify publish -y
 
