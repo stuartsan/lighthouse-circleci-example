@@ -1,0 +1,58 @@
+# Javascript Node CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
+#
+version: 2
+jobs:
+  deployToStaging:
+    docker:
+      - image: circleci/node:10.15.0
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - run: yarn config set prefix ~/.yarn
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+            # when lock file changes, use increasingly general patterns to restore cache
+            - node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+      #     - node-v1-{{ .Branch }}-
+      #     - node-v1-
+
+      # this has to be a global else amplify craps out don't ask.
+      # i guess there's probably a way to have yarn not install it if not needed
+      # but this is quite a bit faster than using `yarn list --patern amplify`
+      - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
+      - run: yarn
+
+      - save_cache:
+          paths:
+            - node_modules
+            # capture globally installed amplify CLI...it doesn't work
+            # when executing it locally via node_modules/.bin/amplify so w/e 
+            - ~/.yarn 
+            # previous one symlinks into here
+            - ~/.config/yarn
+          key: node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
+      # amplify doesn't presently support creds as environment variables so
+      # we write ~/.aws/credentials based on environment variables. ok sure
+      - run: ./script/write_aws_creds_file.sh
+      - run: ./script/amplify_init.sh
+      - run: ~/.yarn/bin/amplify env checkout staging
+      - run: ~/.yarn/bin/amplify publish -y
+
+workflows:
+  version: 2
+  deployToStagingAndTest:
+    jobs:
+      - deployToStaging
+          # at first we will deploy everything but really this should be just for
+          # PRs against master; uncomment this.
+          # branches:
+          #   ignore:
+          #     - master
