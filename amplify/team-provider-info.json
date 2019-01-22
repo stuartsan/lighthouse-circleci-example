@@ -15,5 +15,22 @@
                 "cognitodf5ee648": {}
             }
         }
+    },
+    "staging": {
+        "awscloudformation": {
+            "AuthRoleName": "lighthousecircleciex-20190122104909-authRole",
+            "UnauthRoleArn": "arn:aws:iam::478498278943:role/lighthousecircleciex-20190122104909-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::478498278943:role/lighthousecircleciex-20190122104909-authRole",
+            "Region": "us-west-2",
+            "DeploymentBucketName": "lighthousecircleciex-20190122104909-deployment",
+            "UnauthRoleName": "lighthousecircleciex-20190122104909-unauthRole",
+            "StackName": "lighthousecircleciex-20190122104909",
+            "StackId": "arn:aws:cloudformation:us-west-2:478498278943:stack/lighthousecircleciex-20190122104909/67055e10-1e76-11e9-ab96-02c8553b4c1a"
+        },
+        "categories": {
+            "auth": {
+                "cognitodf5ee648": {}
+            }
+        }
     }
 }

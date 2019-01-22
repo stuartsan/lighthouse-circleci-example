@@ -81,17 +81,17 @@
 		"hostingS3AndCloudFront": {
 			"Type": "AWS::CloudFormation::Stack",
 			"Properties": {
-				"TemplateURL": "https://s3.amazonaws.com/lighthousecircleciex-20190122102221-deployment/amplify-cfn-templates/hosting/template.json",
+				"TemplateURL": "https://s3.amazonaws.com/lighthousecircleciex-20190122104909-deployment/amplify-cfn-templates/hosting/template.json",
 				"Parameters": {
 					"bucketName": "lighthousecircleciex-20190122102323-hostingbucket",
-					"env": "prod"
+					"env": "staging"
 				}
 			}
 		},
 		"authcognitodf5ee648": {
 			"Type": "AWS::CloudFormation::Stack",
 			"Properties": {
-				"TemplateURL": "https://s3.amazonaws.com/lighthousecircleciex-20190122102221-deployment/amplify-cfn-templates/auth/cognitodf5ee648-cloudformation-template.yml",
+				"TemplateURL": "https://s3.amazonaws.com/lighthousecircleciex-20190122104909-deployment/amplify-cfn-templates/auth/cognitodf5ee648-cloudformation-template.yml",
 				"Parameters": {
 					"identityPoolName": "cognitodf5ee648_identitypool_df5ee648",
 					"allowUnauthenticatedIdentities": false,
@@ -149,7 +149,7 @@
 							"Arn"
 						]
 					},
-					"env": "prod"
+					"env": "staging"
 				}
 			}
 		}
