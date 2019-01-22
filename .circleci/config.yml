@@ -16,21 +16,22 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package-lock.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+            # when lock file changes, use increasingly general patterns to restore cache
+          - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          - node-v1-{{ .Branch }}-
+          - node-v1-
 
-            # - run: sudo npm install -g @aws-amplify/cli@multienv
-      - run: npm root -g
-      - run: npm install
+      - run: sudo npm install -g @aws-amplify/cli@multienv
+      - run: npm install --no-audit
 
       - save_cache:
           paths:
             - node_modules
             # capture globally installed amplify CLI...it doesn't work
             # when executing it locally via node_modules/.bin/amplify so w/e 
-            - ~/usr/local/lib/node_modules
-          key: v1-dependencies-{{ checksum "package-lock.json" }}
+            - /usr/local/lib/node_modules
+          key: node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+
       - run: amplify env checkout staging
       - run: amplify publish -y
 
