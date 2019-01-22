@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@aws-amplify/cli": "^0.2.1-multienv.34",
+    "@aws-amplify/cli": "^0.2.1-multienv.35",
     "aws-amplify": "^1.1.19",
     "aws-amplify-react": "^2.3.0",
     "react": "^16.7.0",
