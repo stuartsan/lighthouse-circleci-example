@@ -15,6 +15,7 @@ jobs:
 
       - run: sudo mkdir -p /usr/local/lib/node_modules
       - run: sudo chown -R $USER:$USER /usr/local/lib/node_modules
+      - run: sudo chmod -R 777 /usr/local/lib/node_modules
 
       # Download and cache dependencies
       - restore_cache:
