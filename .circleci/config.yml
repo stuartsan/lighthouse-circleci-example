@@ -14,16 +14,16 @@ jobs:
       - checkout
 
       # Download and cache dependencies
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-          - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
-          - node-v1-{{ .Branch }}-
-          - node-v1-
+      # - restore_cache:
+      #     keys:
+      #       # when lock file changes, use increasingly general patterns to restore cache
+      #     - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+      #     - node-v1-{{ .Branch }}-
+      #     - node-v1-
 
-      - run: sudo npm install -g @aws-amplify/cli@multienv
+      - run: npm install -g @aws-amplify/cli@multienv
         # experiment
-      - run: sudo chmod -R 777 /usr/local/lib/node_modules 
+      - run: chown -R $USER:$USER /usr/local/lib/node_modules
       - run: npm install --no-audit
 
       - save_cache:
