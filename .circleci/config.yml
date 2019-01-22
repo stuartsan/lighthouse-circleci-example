@@ -26,7 +26,7 @@ jobs:
       # this has to be a global else amplify craps out don't ask.
       # i guess there's probably a way to have yarn not install it if not needed
       # but this is quite a bit faster than using `yarn list --patern amplify`
-      - run: "if [ -L $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
+      - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
       - run: yarn
 
       - save_cache:
@@ -35,6 +35,8 @@ jobs:
             # capture globally installed amplify CLI...it doesn't work
             # when executing it locally via node_modules/.bin/amplify so w/e 
             - ~/.yarn 
+            # previous one symlinks into here
+            - ~/.config/yarn
           key: node-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
 
       - run: ~/.yarn/bin/amplify env checkout staging
