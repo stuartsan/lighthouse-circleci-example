@@ -22,6 +22,8 @@ jobs:
           - node-v1-
 
       - run: sudo npm install -g @aws-amplify/cli@multienv
+        # experiment
+      - run: chmod -R 777 /usr/local/lib/node_modules 
       - run: npm install --no-audit
 
       - save_cache:

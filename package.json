@@ -6,6 +6,7 @@
     "@aws-amplify/cli": "^0.2.1-multienv.34",
     "aws-amplify": "^1.1.19",
     "aws-amplify-react": "^2.3.0",
+    "isarray": "^2.0.4",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
     "react-scripts": "2.1.3"
