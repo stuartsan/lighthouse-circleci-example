@@ -24,7 +24,7 @@ jobs:
 
       - run: sudo npm install -g @aws-amplify/cli@multienv
         # experiment
-      - run: chmod -R 777 /usr/local/lib/node_modules 
+      - run: sudo chmod -R 777 /usr/local/lib/node_modules 
       - run: npm install --no-audit
 
       - save_cache:
@@ -32,7 +32,7 @@ jobs:
             - node_modules
             # capture globally installed amplify CLI...it doesn't work
             # when executing it locally via node_modules/.bin/amplify so w/e 
-            - /usr/local/lib/node_modules
+            # - /usr/local/lib/node_modules
           key: node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
 
       - run: amplify env checkout staging
