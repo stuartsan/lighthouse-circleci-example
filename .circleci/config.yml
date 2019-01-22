@@ -27,11 +27,6 @@ jobs:
       - run: yarn global add @aws-amplify/cli@multienv
       - run: yarn
 
-
-        # experiment
-      - run: sudo chown -R $USER:$USER /usr/local/lib/node_modules
-      - run: npm install --no-audit
-
       - save_cache:
           paths:
             - node_modules
