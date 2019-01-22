@@ -16,12 +16,12 @@ jobs:
       - run: yarn config set prefix ~/.yarn
 
       # Download and cache dependencies
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-          - node-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
-          - node-v1-{{ .Branch }}-
-          - node-v1-
+       - restore_cache:
+           keys:
+           # when lock file changes, use increasingly general patterns to restore cache
+           - node-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
+      #     - node-v1-{{ .Branch }}-
+      #     - node-v1-
 
       # this has to be a global else
       - run: yarn global add @aws-amplify/cli@multienv
