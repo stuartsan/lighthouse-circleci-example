@@ -5,12 +5,6 @@
 version: 2
 jobs:
   deployToStaging:
-    # at first we will deploy everything but really this should be just for
-    # PRs against master; uncomment this.
-    # branches:
-    #   ignore:
-    #     - master
-
     docker:
       - image: circleci/node:10.15.0
 
@@ -33,6 +27,13 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-        
-      # run tests!
-      - run: yarn test
+workflows:
+  version: 2
+  deployToStagingAndTest:
+    jobs:
+      - deployToStaging
+          # at first we will deploy everything but really this should be just for
+          # PRs against master; uncomment this.
+          # branches:
+          #   ignore:
+          #     - master
