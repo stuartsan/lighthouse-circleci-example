@@ -27,6 +27,9 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
+      - run: amplify env checkout staging
+      - run: amplify publish -y
+
 workflows:
   version: 2
   deployToStagingAndTest:
