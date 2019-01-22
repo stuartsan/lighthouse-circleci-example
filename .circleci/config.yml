@@ -19,7 +19,7 @@ jobs:
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
+            - node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
       #     - node-v1-{{ .Branch }}-
       #     - node-v1-
 
@@ -37,7 +37,7 @@ jobs:
             - ~/.yarn 
             # previous one symlinks into here
             - ~/.config/yarn
-          key: node-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          key: node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
 
       - run: ~/.yarn/bin/amplify env checkout staging
       - run: ~/.yarn/bin/amplify publish -y
