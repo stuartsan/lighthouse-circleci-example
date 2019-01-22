@@ -19,7 +19,7 @@ jobs:
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-          - node-v1-{{ .Branch }}-{{ checksum "yarn-lock.json" }}
+          - node-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
           - node-v1-{{ .Branch }}-
           - node-v1-
 
@@ -33,7 +33,7 @@ jobs:
             # capture globally installed amplify CLI...it doesn't work
             # when executing it locally via node_modules/.bin/amplify so w/e 
             - ~/.yarn 
-          key: node-v1-{{ .Branch }}-{{ checksum "yarn-lock.json" }}
+          key: node-v1-{{ .Branch }}-{{ checksum "yarn.lock" }}
 
       - run: ~/.yarn/bin/amplify env checkout staging
       - run: ~/.yarn/bin/amplify publish -y
