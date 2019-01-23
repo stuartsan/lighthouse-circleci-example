@@ -11,40 +11,51 @@ jobs:
     working_directory: ~/repo
 
     steps:
-      - checkout
+      run: echo 'Skipping deploy for faster iteration, brb'
 
-      - run: yarn config set prefix ~/.yarn
+      # - checkout
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
-      #     - node-v1-{{ .Branch }}-
-      #     - node-v1-
+      # - run: yarn config set prefix ~/.yarn
 
-      # this has to be a global else amplify craps out don't ask.
-      # i guess there's probably a way to have yarn not install it if not needed
-      # but this is quite a bit faster than using `yarn list --patern amplify`
-      - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
-      - run: yarn
+      # # Download and cache dependencies
+      # - restore_cache:
+      #     keys:
+      #       # when lock file changes, use increasingly general patterns to restore cache
+      #       - node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+      # #     - node-v1-{{ .Branch }}-
+      # #     - node-v1-
 
-      - save_cache:
-          paths:
-            - node_modules
-            # capture globally installed amplify CLI...it doesn't work
-            # when executing it locally via node_modules/.bin/amplify so w/e 
-            - ~/.yarn 
-            # previous one symlinks into here
-            - ~/.config/yarn
-          key: node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+      # # this has to be a global else amplify craps out don't ask.
+      # # i guess there's probably a way to have yarn not install it if not needed
+      # # but this is quite a bit faster than using `yarn list --patern amplify`
+      # - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
+      # - run: yarn
 
-      # amplify doesn't presently support creds as environment variables so
-      # we write ~/.aws/credentials based on environment variables. ok sure
-      - run: ./script/write_aws_creds_file.sh
-      - run: ./script/amplify_init.sh
-      - run: ~/.yarn/bin/amplify env checkout staging
-      - run: ~/.yarn/bin/amplify publish -y
+      # - save_cache:
+      #     paths:
+      #       - node_modules
+      #       # capture globally installed amplify CLI...it doesn't work
+      #       # when executing it locally via node_modules/.bin/amplify so w/e 
+      #       - ~/.yarn 
+      #       # previous one symlinks into here
+      #       - ~/.config/yarn
+      #     key: node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
+      # # amplify doesn't presently support creds as environment variables so
+      # # we write ~/.aws/credentials based on environment variables. ok sure
+      # - run: ./script/write_aws_creds_file.sh
+      # - run: ./script/amplify_init.sh
+      # - run: ~/.yarn/bin/amplify env checkout staging
+      # - run: ~/.yarn/bin/amplify publish -y
+  perfTests:
+    working_directory: ~/repo
+
+    steps:
+      run: echo 'tests!'
+      run: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci \
+          --version --quiet --output=json https://dqenrys909x8o.cloudfront.net \
+          > report.json
+      run: cat report.json
 
 workflows:
   version: 2
@@ -56,3 +67,4 @@ workflows:
           # branches:
           #   ignore:
           #     - master
+      - perfTests
