@@ -39,6 +39,9 @@ jobs:
             - ~/.config/yarn
           key: node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
 
+      # amplify doesn't presently support creds as environment variables so
+      # we write ~/.aws/credentials based on environment variables. ok sure
+      - run: ./script/write_aws_creds_file.sh
       # amplify will poop if this file isn't there and valid json
       - run: echo "{}" > ./amplify/.config/local-env-info.json
       - run: ./script/amplify_init.sh
