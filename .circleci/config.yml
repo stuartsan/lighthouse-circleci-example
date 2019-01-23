@@ -48,15 +48,24 @@ jobs:
       # - run: ~/.yarn/bin/amplify env checkout staging
       # - run: ~/.yarn/bin/amplify publish -y
   perfTests:
-    machine: true
+    docker: true
+      - image: circleci/node:10.15.0
 
     working_directory: ~/repo
 
     steps:
-      - run: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci \
-             https://dqenrys909x8o.cloudfront.net --output=json --quiet \
-             > report.json
-      - run: cat report.json
+     - setup_remote_docker:
+         docker_layer_caching: true
+
+      - run:
+          name: Run lighthouse against staging deployment
+          command: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci \
+                   https://dqenrys909x8o.cloudfront.net --output=json --quiet \
+                   > report.json
+
+      - run:
+          name: Analyze lighthouse scores vs requirements
+          command: ./script/analyze_scores.js package.json report.json 
 
 workflows:
   version: 2
