@@ -60,13 +60,8 @@ jobs:
           docker_layer_caching: true
 
       - run:
-          name: Fetch lighthouse-ci docker image
-          command: docker pull kporras07/lighthouse-ci
-
-      - run:
           name: Run lighthouse against staging deployment
-          command: docker run -i --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci https://dqenrys909x8o.cloudfront.net --output=json --quiet
-      - run: cat report.json
+          command: docker run -i --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci https://dqenrys909x8o.cloudfront.net --output=json --quiet > report.json
       - run:
           name: Analyze lighthouse scores vs requirements
           command: ./script/analyze_scores.js package.json report.json 
