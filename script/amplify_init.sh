@@ -11,9 +11,7 @@ REACTCONFIG="{\
 AWSCLOUDFORMATIONCONFIG="{\
 \"configLevel\":\"project\",\
 \"useProfile\":true,\
-\"profileName\":\"default\",\
-\"accessKeyId\":\"bullshitkey\",\
-\"secretAccessKey\":\"bullshitkey2\",\
+\"profileName\":\"amplify\",\
 \"region\":\"us-west-2\"\
 }"
 AMPLIFY="{\
