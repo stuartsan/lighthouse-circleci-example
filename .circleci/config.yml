@@ -61,10 +61,8 @@ jobs:
 
       - run:
           name: Run lighthouse against staging deployment
-          command: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci \
-                   https://dqenrys909x8o.cloudfront.net --output=json --quiet \
-                   > report.json
-
+          command: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci https://dqenrys909x8o.cloudfront.net --output=json --quiet > report.json 
+      - run: cat report.json
       - run:
           name: Analyze lighthouse scores vs requirements
           command: ./script/analyze_scores.js package.json report.json 
