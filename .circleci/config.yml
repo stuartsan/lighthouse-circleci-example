@@ -52,9 +52,7 @@ jobs:
 
     steps:
       run: echo 'tests!'
-      run: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci \
-          --version --quiet --output=json https://dqenrys909x8o.cloudfront.net \
-          > report.json
+      run: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci --version --quiet --output=json https://dqenrys909x8o.cloudfront.net > report.json
       run: cat report.json
 
 workflows:
