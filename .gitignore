@@ -28,3 +28,5 @@ amplify/\#current-cloud-backend
 amplify/backend/amplify-meta.json
 aws-exports.js
 awsconfiguration.json
+
+report.json

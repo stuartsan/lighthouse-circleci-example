@@ -53,10 +53,9 @@ jobs:
     working_directory: ~/repo
 
     steps:
-      - run: echo 'tests!'
-      - run: docker pull kporras07/lighthouse-ci
-      # command from the lh ci docs
-      - run: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse_ci --quiet --output=json https://example.com > report.json
+      - run: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci \
+             https://dqenrys909x8o.cloudfront.net --output=json --quiet \
+             > report.json
       - run: cat report.json
 
 workflows:
