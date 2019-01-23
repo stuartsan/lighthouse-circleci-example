@@ -55,7 +55,7 @@ jobs:
 
     steps:
       - setup_remote_docker:
-        docker_layer_caching: true
+          docker_layer_caching: true
 
       - run:
           name: Run lighthouse against staging deployment
