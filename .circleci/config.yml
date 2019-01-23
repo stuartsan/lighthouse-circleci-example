@@ -65,7 +65,7 @@ jobs:
 
       - run:
           name: Run lighthouse against staging deployment
-          command: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci https://dqenrys909x8o.cloudfront.net --output=json --quiet > report.json 
+          command: docker run -it --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci https://dqenrys909x8o.cloudfront.net --output=json --quiet
       - run: cat report.json
       - run:
           name: Analyze lighthouse scores vs requirements
@@ -81,4 +81,6 @@ workflows:
           # branches:
           #   ignore:
           #     - master
-      - perfTests
+      - perfTests:
+          requires: 
+            - deployToStaging
