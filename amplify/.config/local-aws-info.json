@@ -1,0 +1,12 @@
+{
+    "staging": {
+        "configLevel": "project",
+        "useProfile": true,
+        "profileName": "amplify"
+    },
+    "prod": {
+        "configLevel": "project",
+        "useProfile": true,
+        "profileName": "amplify"
+    }
+}
