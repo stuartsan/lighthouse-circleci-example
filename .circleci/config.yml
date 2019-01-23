@@ -11,40 +11,89 @@ jobs:
     working_directory: ~/repo
 
     steps:
+      - run: echo 'Skipping deploy for faster iteration, brb'
+
+      # - checkout
+
+      # - run: yarn config set prefix ~/.yarn
+
+      # # Download and cache dependencies
+      # - restore_cache:
+      #     keys:
+      #       # when lock file changes, use increasingly general patterns to restore cache
+      #       - node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+      # #     - node-v1-{{ .Branch }}-
+      # #     - node-v1-
+
+      # # this has to be a global else amplify craps out don't ask.
+      # # i guess there's probably a way to have yarn not install it if not needed
+      # # but this is quite a bit faster than using `yarn list --patern amplify`
+      # - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
+      # - run: yarn
+
+      # - save_cache:
+      #     paths:
+      #       - node_modules
+      #       # capture globally installed amplify CLI...it doesn't work
+      #       # when executing it locally via node_modules/.bin/amplify so w/e 
+      #       - ~/.yarn 
+      #       # previous one symlinks into here
+      #       - ~/.config/yarn
+      #     key: node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
+      # # amplify doesn't presently support creds as environment variables so
+      # # we write ~/.aws/credentials based on environment variables. ok sure
+      # - run: ./script/write_aws_creds_file.sh
+      # - run: ./script/amplify_init.sh
+      # - run: ~/.yarn/bin/amplify env checkout staging
+      # - run: ~/.yarn/bin/amplify publish -y
+  perfTests:
+    parallelism: 3
+
+    docker:
+      - image: kporras07/lighthouse-ci
+
+    working_directory: ~/repo
+
+    steps:
       - checkout
 
-      - run: yarn config set prefix ~/.yarn
+      - run:
+          name: Run lighthouse against staging deployment
+          command: |
+            lighthouse https://staging.kubernetesfordogs.com --port=9222 --chrome-flags=\"--headless\" \
+            --output-path=/home/chrome/reports/run-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
+            --output=json --output=html --quiet
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-            # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
-      #     - node-v1-{{ .Branch }}-
-      #     - node-v1-
 
-      # this has to be a global else amplify craps out don't ask.
-      # i guess there's probably a way to have yarn not install it if not needed
-      # but this is quite a bit faster than using `yarn list --patern amplify`
-      - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
-      - run: yarn
-
-      - save_cache:
+      - persist_to_workspace:
+          root: /home/chrome
           paths:
-            - node_modules
-            # capture globally installed amplify CLI...it doesn't work
-            # when executing it locally via node_modules/.bin/amplify so w/e 
-            - ~/.yarn 
-            # previous one symlinks into here
-            - ~/.config/yarn
-          key: node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+            - reports
 
-      # amplify doesn't presently support creds as environment variables so
-      # we write ~/.aws/credentials based on environment variables. ok sure
-      - run: ./script/write_aws_creds_file.sh
-      - run: ./script/amplify_init.sh
-      - run: ~/.yarn/bin/amplify env checkout staging
-      - run: ~/.yarn/bin/amplify publish -y
+  processResults:
+    docker:
+      - image: circleci/node:10.15.0
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: "."
+
+      - store_artifacts:
+          path: reports
+          destination: reports
+
+      - run: yarn add circle-github-bot
+
+
+      - run:
+          name: Analyze and report desired vs actual lighthouse scores
+          command: ./script/analyze_scores.js package.json reports
+
 
 workflows:
   version: 2
@@ -56,3 +105,9 @@ workflows:
           # branches:
           #   ignore:
           #     - master
+      - perfTests:
+          requires: 
+            - deployToStaging
+      - processResults:
+          requires: 
+            - perfTests

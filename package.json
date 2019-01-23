@@ -26,5 +26,13 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "lighthouse": {
+    "requiredScores": {
+      "performance": 95,
+      "accessibility": 90,
+      "best-practices": 80,
+      "seo": 90
+    }
+  }
 }
