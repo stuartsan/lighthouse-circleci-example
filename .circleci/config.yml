@@ -41,9 +41,7 @@ jobs:
 
       # amplify will poop if this file isn't there and valid json
       - run: echo "{}" > ./amplify/.config/local-env-info.json
-      # This AWS amplify CLI requires human interaction so here we automate it
-      - run: which expect
-      - run: ./script/amplify_init.exp
+      - run: ./script/amplify_init.sh
       - run: ~/.yarn/bin/amplify env checkout staging
       - run: ~/.yarn/bin/amplify publish -y
 
