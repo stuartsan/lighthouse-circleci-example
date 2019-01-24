@@ -108,9 +108,15 @@ jobs:
     steps:
       - checkout
 
+      - run: ls -al
+      - run: ls -al node_modules
+
       - restore_cache:
           keys:
             - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
+      - run: ls -al
+      - run: ls -al node_modules
 
       - attach_workspace:
           at: "."
@@ -118,6 +124,9 @@ jobs:
       - store_artifacts:
           path: reports
           destination: reports
+
+      - run: ls -al
+      - run: ls -al node_modules
 
       - run:
           name: Analyze and report desired vs actual lighthouse scores
