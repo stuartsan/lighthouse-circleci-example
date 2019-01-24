@@ -73,13 +73,19 @@ Object.keys(requiredScores).forEach(category => {
 
 prComment.push('<h3>Detailed reports</h3>');
 htmlReportFilenames.forEach((filename, idx) => {
-  prComment.push(`<p>bot.artifactLink(`reports/${filename}`, `Run ${idx + 1}`)</p>`);
+  const link = bot.artifactLink(`reports/${filename}`, `Run ${idx + 1}`);
+  prComment.push(`<p>${link}</p>`);
 });
 
 console.log(ciStdout.join('\n'));
 console.log(prComment.join('\n'));
 
-bot.comment(process.env.GITHUB_OAUTH_TOKEN, prComment.join('\n'));
+// We shouldn't fail if the PR comment doesn't work, that is a nice to have
+try {
+  bot.comment(process.env.GITHUB_OAUTH_TOKEN, prComment.join('\n'));
+} catch(e) {
+  console.log(e);
+}
 
 if (!success) {
   process.exit(1);
