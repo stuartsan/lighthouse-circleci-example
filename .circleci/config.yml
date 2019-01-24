@@ -54,6 +54,8 @@ jobs:
 
     steps:
       - run: pwd
+      - run: ls -al
+
       - checkout
 
       - run:
@@ -63,7 +65,6 @@ jobs:
               --entrypoint=lighthouse kporras07/lighthouse-ci https://dqenrys909x8o.cloudfront.net \
               --port=9222 --chrome-flags="--headless" --output-path=/home/chrome/reports/run \
               --output=json --output=html
-      - run: ls -al
       - run: ls -al ./reports
       - run:
           name: Analyze lighthouse scores vs requirements
