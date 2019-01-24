@@ -134,7 +134,7 @@ workflows:
   deployToStagingAndTest:
     jobs:
       - nodeModules
-      - deployToStaging
+      - deployToStaging:
           requires: 
             - nodeModules
       - perfTests:
