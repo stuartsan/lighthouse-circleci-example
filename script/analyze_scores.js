@@ -73,7 +73,7 @@ Object.keys(requiredScores).forEach(category => {
 
 prComment.push('<h3>Detailed reports</h3>');
 htmlReportFilenames.forEach((filename, idx) => {
-  const link = bot.artifactLink(`reports/${filename}`, `Run ${idx + 1}`);
+  const link = bot.artifactLink(`/reports/${filename}`, `Run ${idx + 1}`);
   prComment.push(`<p>${link}</p>`);
 });
 
