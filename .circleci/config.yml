@@ -56,11 +56,6 @@ jobs:
     steps:
       - checkout
 
-      - run: pwd
-      - run: ls -al
-      - run: ls -al /home/chrome/
-      - run: ls -al /home/chrome/reports
-
       - run:
           name: Run lighthouse against staging deployment
           command: |
