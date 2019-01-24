@@ -73,7 +73,10 @@ Object.keys(requiredScores).forEach(category => {
 
 prComment.push('<h3>Detailed reports</h3>');
 htmlReportFilenames.forEach((filename, idx) => {
-  const link = bot.artifactLink(`/reports/${filename}`, `Run ${idx + 1}`);
+  let link = bot.artifactLink(`reports/${filename}`, `Run ${idx + 1}`);
+  // LMAO -- this bot is making some assumptions about file path
+  // that I can't easily override so w/e 
+  link = link.replace('/home/circleci/project', '');
   prComment.push(`<p>${link}</p>`);
 });
 
