@@ -56,8 +56,8 @@ jobs:
     steps:
       - checkout
 
-      - setup_remote_docker:
-          docker_layer_caching: true
+      # - setup_remote_docker:
+      #     docker_layer_caching: true
 
       - run:
           name: Run lighthouse against staging deployment
@@ -67,6 +67,7 @@ jobs:
               --port=9222 --chrome-flags="--headless" --output-path=/home/chrome/reports/run \
               --output=json --output=html
       - run: ls -al ./reports
+      - run: ls -al
       - run:
           name: Analyze lighthouse scores vs requirements
           command: ./script/analyze_scores.js package.json reports/run.report.json 
