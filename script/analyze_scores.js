@@ -50,7 +50,7 @@ Object.keys(requiredScores).forEach(category => {
   }
 });
 
-bot.comment('<p>what up this is an automated message</p>');
+bot.comment(process.env.GITHUB_OAUTH_TOKEN, '<p>what up this is an automated message</p>');
 
 if (!success) {
   process.exit(1);
