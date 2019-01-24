@@ -61,10 +61,15 @@ jobs:
 
       - run:
           name: Run lighthouse against staging deployment
-          command: docker run -i --rm --cap-add=SYS_ADMIN kporras07/lighthouse-ci https://dqenrys909x8o.cloudfront.net --output=json --quiet > report.json
+          command: docker run -it --rm --cap-add=SYS_ADMIN \
+                   -v $(PWD)/reports:/home/chrome/reports \
+                   --entrypoint=lighthouse kporras07/lighthouse-ci \
+                  https://dqenrys909x8o.cloudfront.net --port=9222 \
+                  --chrome-flags="--headless" \
+                  --output-path=/home/chrome/reports/run --output=json --output=html
       - run:
           name: Analyze lighthouse scores vs requirements
-          command: ./script/analyze_scores.js package.json report.json 
+          command: ./script/analyze_scores.js package.json reports/run.report.json 
 
 workflows:
   version: 2
