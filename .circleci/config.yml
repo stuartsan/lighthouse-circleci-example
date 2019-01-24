@@ -1,9 +1,39 @@
-# Javascript Node CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-javascript/ for more details
-#
 version: 2
 jobs:
+  # Download and cache dependencies
+  nodeModules:
+    docker:
+      - image: circleci/node:10.15.0
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - run: yarn config set prefix ~/.yarn
+
+      - restore_cache:
+          keys:
+            - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
+      - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
+
+      - run: yarn
+
+      - run: 
+          name: Prune unnecessary stuff from node_modules 
+          command: curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | bash  && ./bin/node-prune
+
+      - save_cache:
+          paths:
+            - node_modules
+            # capture globally installed amplify CLI...it doesn't work
+            # when executing it locally via node_modules/.bin/amplify so w/e 
+            - ~/.yarn 
+            # previous one symlinks into here
+            - ~/.config/yarn
+          key: node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
   deployToStaging:
     docker:
       - image: circleci/node:10.15.0
@@ -17,38 +47,18 @@ jobs:
 
       # - run: yarn config set prefix ~/.yarn
 
-      # # Download and cache dependencies
       # - restore_cache:
       #     keys:
-      #       # when lock file changes, use increasingly general patterns to restore cache
-      #       - node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
-      # #     - node-v1-{{ .Branch }}-
-      # #     - node-v1-
-
-      # # this has to be a global else amplify craps out don't ask.
-      # # i guess there's probably a way to have yarn not install it if not needed
-      # # but this is quite a bit faster than using `yarn list --patern amplify`
-      # - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
-      # - run: yarn
-
-      # - save_cache:
-      #     paths:
-      #       - node_modules
-      #       # capture globally installed amplify CLI...it doesn't work
-      #       # when executing it locally via node_modules/.bin/amplify so w/e 
-      #       - ~/.yarn 
-      #       # previous one symlinks into here
-      #       - ~/.config/yarn
-      #     key: node-v1-{{ .Branch }}-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+      #       - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
 
       # # amplify doesn't presently support creds as environment variables so
       # # we write ~/.aws/credentials based on environment variables. ok sure
-      # - run: ./script/write_aws_creds_file.sh
-      # - run: ./script/amplify_init.sh
+      # - run: ./ci-scripts/write_aws_creds_file.sh
+      # - run: ./ci-scripts/amplify_init.sh
       # - run: ~/.yarn/bin/amplify env checkout staging
-      # - run: ~/.yarn/bin/amplify publish -y
+      # - run: ~/.yarn/bin/amplify publish -y --invalidateCloudFront
   perfTests:
-    parallelism: 3
+    parallelism: 2
 
     docker:
       - image: kporras07/lighthouse-ci
@@ -60,10 +70,52 @@ jobs:
 
       - run:
           name: Run lighthouse against staging deployment
+          environment:
+            TEST_URL: https://staging.kubernetesfordogs.com
           command: |
-            lighthouse https://staging.kubernetesfordogs.com --port=9222 --chrome-flags=\"--headless\" \
-            --output-path=/home/chrome/reports/run-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
-            --output=json --output=html --quiet
+            MAX_BUNDLE_SIZE_KB="$(node -p 'require("./package.json").lighthouse.maxBundleSizeKb')" \
+            JS_BUNDLE_REGEX="$(node -p 'require("./package.json").lighthouse.jsBundleRegex')" \
+            lighthouse $TEST_URL \
+              --config-path=./lighthouse-config/custom-config.js \
+              --port=9222 \
+              --chrome-flags=\"--headless\" \
+              --output-path=/home/chrome/reports/anonymous-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
+              --output=json \
+              --output=html
+
+
+      - persist_to_workspace:
+          root: /home/chrome
+          paths:
+            - reports
+
+  perfTestsAuthenticated:
+    parallelism: 2
+
+    docker:
+      - image: kporras07/lighthouse-ci
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - run: npm install puppeteer
+
+      - run:
+          name: Run lighthouse against staging deployment, authenticated user
+          environment:
+            TEST_URL: https://staging.kubernetesfordogs.com/dashboard
+          command: |
+            MAX_BUNDLE_SIZE_KB="$(node -p 'require("./package.json").lighthouse.maxBundleSizeKb')" \
+            JS_BUNDLE_REGEX="$(node -p 'require("./package.json").lighthouse.jsBundleRegex')" \
+            lighthouse $TEST_URL
+              --config-path=./lighthouse-config/custom-config-authenticate.js \
+              --port=9222 \
+              --chrome-flags=\"--headless\" \
+              --output-path=/home/chrome/reports/authenticated-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
+              --output=json \
+              --output=html
 
 
       - persist_to_workspace:
@@ -80,6 +132,10 @@ jobs:
     steps:
       - checkout
 
+      - restore_cache:
+          keys:
+            - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
       - attach_workspace:
           at: "."
 
@@ -87,27 +143,31 @@ jobs:
           path: reports
           destination: reports
 
-      - run: yarn add circle-github-bot
-
-
       - run:
           name: Analyze and report desired vs actual lighthouse scores
-          command: ./script/analyze_scores.js package.json reports
+          command: ./ci-scripts/analyze_scores.js package.json reports
 
 
 workflows:
   version: 2
+  # at first we will deploy everything but really this should be just for
+  # PRs against master; uncomment this.
+  # branches:
+  #   ignore:
+  #     - master
   deployToStagingAndTest:
     jobs:
-      - deployToStaging
-          # at first we will deploy everything but really this should be just for
-          # PRs against master; uncomment this.
-          # branches:
-          #   ignore:
-          #     - master
+      - nodeModules
+      - deployToStaging:
+          requires: 
+            - nodeModules
       - perfTests:
+          requires: 
+            - deployToStaging
+      - perfTestsAuthenticated:
           requires: 
             - deployToStaging
       - processResults:
           requires: 
             - perfTests
+            - perfTestsAuthenticated

@@ -1,12 +1,13 @@
 {
   "name": "lighthouse-circleci-example",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "private": true,
   "dependencies": {
     "@aws-amplify/cli": "^0.2.1-multienv.35",
     "aws-amplify": "^1.1.19",
     "aws-amplify-react": "^2.3.0",
     "axios": "^0.18.0",
+    "circle-github-bot": "^2.0.1",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
     "react-router-dom": "^4.3.1",
@@ -32,7 +33,10 @@
       "performance": 95,
       "accessibility": 90,
       "best-practices": 80,
-      "seo": 90
-    }
+      "seo": 90,
+      "bundlesize": 100
+    },
+    "maxBundleSizeKb": 250,
+    "jsBundleRegex": "/static/js/[^(main)].*chunk\\.js"
   }
 }
