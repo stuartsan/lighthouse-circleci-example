@@ -62,7 +62,7 @@ jobs:
       - run:
           name: Run lighthouse against staging deployment
           command: docker run -it --rm --cap-add=SYS_ADMIN \
-                   -v $(PWD)/reports:/home/chrome/reports \
+                   -v reports:/home/chrome/reports \
                    --entrypoint=lighthouse kporras07/lighthouse-ci \
                   https://dqenrys909x8o.cloudfront.net --port=9222 \
                   --chrome-flags="--headless" \
