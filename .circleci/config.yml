@@ -4,6 +4,34 @@
 #
 version: 2
 jobs:
+  # Download and cache dependencies
+  nodeModules:
+    docker:
+      - image: circleci/node:10.15.0
+
+    steps:
+      - checkout
+
+      - run: yarn config set prefix ~/.yarn
+
+      - restore_cache:
+          keys:
+            - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
+      - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
+
+      - run: yarn
+
+      - save_cache:
+          paths:
+            - node_modules
+            # capture globally installed amplify CLI...it doesn't work
+            # when executing it locally via node_modules/.bin/amplify so w/e 
+            - ~/.yarn 
+            # previous one symlinks into here
+            - ~/.config/yarn
+          key: node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
   deployToStaging:
     docker:
       - image: circleci/node:10.15.0
@@ -80,15 +108,16 @@ jobs:
     steps:
       - checkout
 
+      - restore_cache:
+          keys:
+            - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
       - attach_workspace:
           at: "."
 
       - store_artifacts:
           path: reports
           destination: reports
-
-      - run: yarn add circle-github-bot
-
 
       - run:
           name: Analyze and report desired vs actual lighthouse scores
@@ -97,14 +126,17 @@ jobs:
 
 workflows:
   version: 2
+  # at first we will deploy everything but really this should be just for
+  # PRs against master; uncomment this.
+  # branches:
+  #   ignore:
+  #     - master
   deployToStagingAndTest:
     jobs:
+      - nodeModules
       - deployToStaging
-          # at first we will deploy everything but really this should be just for
-          # PRs against master; uncomment this.
-          # branches:
-          #   ignore:
-          #     - master
+          requires: 
+            - nodeModules
       - perfTests:
           requires: 
             - deployToStaging
