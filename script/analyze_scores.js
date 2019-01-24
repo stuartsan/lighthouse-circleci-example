@@ -53,13 +53,11 @@ Object.keys(requiredScores).forEach(category => {
 
   if (actualBestOutOf100 < requiredScores[category]) {
     ciStdout.push(`❌ ${category}: ${actualBestOutOf100}/${requiredOutOf100}`);
-    prComment.push(`<h3>❌ ${category}</h3>`);
-    prComment.push(`<p>${actualBestOutOf100}/${requiredOutOf100}</p>`);
+    prComment.push(`<h3>❌ ${category}: ${actualBestOutOf100}/${requiredOutOf100}</h3>`);
     success = false;
   } else {
     ciStdout.push(`✅ ${category}: ${actualBestOutOf100}/${requiredOutOf100}`);
-    prComment.push(`<h3>✅ ${category}</h3>`);
-    prComment.push(`<p>${actualBestOutOf100}/${requiredOutOf100}</p>`);
+    prComment.push(`<h3>✅ ${category}: ${actualBestOutOf100}/${requiredOutOf100}</h3>`);
   }
 
   const areAllScoresEqual = scoresAcrossRunsByCategory[category]
@@ -72,18 +70,19 @@ Object.keys(requiredScores).forEach(category => {
 });
 
 prComment.push('<h3>Detailed reports</h3>');
+prComment.push('<p>');
 htmlReportFilenames.forEach((filename, idx) => {
   let link = bot.artifactLink(`reports/${filename}`, `Run ${idx + 1}`);
   // LMAO -- this bot is making some assumptions about file path
   // that I can't easily override so w/e 
   link = link.replace('/home/circleci/project', '');
-  prComment.push(`<p>${link}</p>`);
+  prComment.push(${link});
 });
+prComment.push('</p>');
 
 console.log(ciStdout.join('\n'));
-console.log(prComment.join('\n'));
 
-// We shouldn't fail if the PR comment doesn't work, that is a nice to have
+// We shouldn't fail if the PR comment doesn't work, that is a "nice to have"
 try {
   bot.comment(process.env.GITHUB_OAUTH_TOKEN, prComment.join('\n'));
 } catch(e) {
