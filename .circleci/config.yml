@@ -109,17 +109,17 @@ jobs:
       - checkout
 
       - run: ls -al
-      - run: ls -al node_modules
 
       - restore_cache:
           keys:
             - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
 
       - run: ls -al
-      - run: ls -al node_modules
 
       - attach_workspace:
           at: "."
+
+      - run: ls -al
 
       - store_artifacts:
           path: reports
