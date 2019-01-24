@@ -62,9 +62,27 @@ jobs:
             lighthouse https://dqenrys909x8o.cloudfront.net --port=9222 --chrome-flags=\"--headless\" \
             --output-path=/home/chrome/reports/run --output=json --output=html
 
+
+      - persist_to_workspace:
+          root: /home/chrome
+          paths:
+            - reports
+
+  processResults:
+    docker:
+      - image: circleci/node:10.15.0
+
+    working_directory: ~/repo
+
+    steps:
+      - attach_workspace:
+          at: "."
+
+      - run: ls -al
+      - run: ls -al reports
       - run:
           name: Analyze lighthouse scores vs requirements
-          command: ./script/analyze_scores.js package.json /home/chrome/reports/run.report.json 
+          command: ./script/analyze_scores.js package.json reports/run.report.json 
 
 workflows:
   version: 2
@@ -79,3 +97,6 @@ workflows:
       - perfTests:
           requires: 
             - deployToStaging
+      - processResults:
+          requires: 
+            - perfTests
