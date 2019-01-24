@@ -87,6 +87,9 @@ jobs:
           path: reports
           destination: reports
 
+      - run: yarn add circle-github-bot
+
+
       - run:
           name: Analyze and report desired vs actual lighthouse scores
           command: ./script/analyze_scores.js package.json reports

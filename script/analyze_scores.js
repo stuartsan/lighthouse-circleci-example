@@ -2,6 +2,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const bot = require("circle-github-bot").create();
+
 
 const pkg = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const requiredScores = pkg.lighthouse.requiredScores;
@@ -47,6 +49,8 @@ Object.keys(requiredScores).forEach(category => {
     console.log(`   - scores varied across runs: [${scoresAcrossRunsByCategory[category].join(' ')}]`)
   }
 });
+
+bot.comment('<p>what up this is an automated message</p>');
 
 if (!success) {
   process.exit(1);
