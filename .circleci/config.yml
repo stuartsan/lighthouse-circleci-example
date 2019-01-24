@@ -53,18 +53,18 @@ jobs:
     working_directory: ~/repo
 
     steps:
+      - checkout
+
       - run: pwd
       - run: ls -al
-
-      - checkout
 
       - run:
           name: Run lighthouse against staging deployment
           command: |
-            docker run -it --rm --cap-add=SYS_ADMIN -v /home/circleci/repo/reports:/home/chrome/reports \
-              --entrypoint=lighthouse kporras07/lighthouse-ci https://dqenrys909x8o.cloudfront.net \
-              --port=9222 --chrome-flags="--headless" --output-path=/home/chrome/reports/run \
-              --output=json --output=html
+            docker run -it --rm --cap-add=SYS_ADMIN \
+              -v /home/circleci/repo/reports:/home/chrome/reports \
+              --entrypoint=/bin/bash kporras07/lighthouse-ci \
+              -c "lighthouse https://dqenrys909x8o.cloudfront.net --port=9222 --chrome-flags=\"--headless\" --output-path=/home/chrome/reports/run --output=json --output=html"
       - run: ls -al ./reports
       - run:
           name: Analyze lighthouse scores vs requirements
