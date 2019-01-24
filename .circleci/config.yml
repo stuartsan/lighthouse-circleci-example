@@ -83,12 +83,13 @@ jobs:
       - attach_workspace:
           at: "."
 
-      - run:
-          name: Analyze desired vs actual lighthouse scores
-          command: ./script/analyze_scores.js package.json reports
-
       - store_artifacts:
           path: reports
+
+      - run:
+          name: Analyze and report desired vs actual lighthouse scores
+          command: ./script/analyze_scores.js package.json reports
+
 
 workflows:
   version: 2
