@@ -62,7 +62,7 @@ jobs:
           name: Run lighthouse against staging deployment
           command: |
             lighthouse https://dqenrys909x8o.cloudfront.net --port=9222 --chrome-flags=\"--headless\" \
-            --output-path=/home/chrome/reports/run-"$(echo -n $CIRCLE_SHELL_ENV | md5sum)" \
+            --output-path=/home/chrome/reports/run-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
             --output=json --output=html --quiet
 
 
