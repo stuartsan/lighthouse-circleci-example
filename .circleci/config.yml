@@ -48,18 +48,12 @@ jobs:
       # - run: ~/.yarn/bin/amplify env checkout staging
       # - run: ~/.yarn/bin/amplify publish -y
   perfTests:
-    docker:
-      - image: circleci/node:10.15.0
+    machine: true
 
     working_directory: ~/repo
 
     steps:
       - checkout
-
-      - setup_remote_docker:
-          docker_layer_caching: true
-
-      - run: ls -al
 
       - run:
           name: Run lighthouse against staging deployment
