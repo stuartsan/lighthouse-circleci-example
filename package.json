@@ -33,7 +33,10 @@
       "performance": 95,
       "accessibility": 90,
       "best-practices": 80,
-      "seo": 90
-    }
+      "seo": 90,
+      "bundlesize": 100
+    },
+    "maxBundleSizeKb": 250,
+    "jsBundleRegex": "/static/js/[^(main)].*chunk\.js"
   }
 }
