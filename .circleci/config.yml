@@ -24,6 +24,10 @@ jobs:
 
       - run: yarn
 
+      - run: 
+          name: Prune unnecessary stuff from node_modules 
+          command: curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | bash -s -- -b /usr/local/bin && /usr/local/bin/node-prune
+
       - save_cache:
           paths:
             - node_modules
