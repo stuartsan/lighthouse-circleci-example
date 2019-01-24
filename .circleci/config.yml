@@ -48,7 +48,8 @@ jobs:
       # - run: ~/.yarn/bin/amplify env checkout staging
       # - run: ~/.yarn/bin/amplify publish -y
   perfTests:
-    machine: true
+    docker:
+      - image: kporras07/lighthouse-ci
 
     working_directory: ~/repo
 
@@ -57,15 +58,15 @@ jobs:
 
       - run: pwd
       - run: ls -al
+      - run: ls -al /home/chrome/
+      - run: ls -al /home/chrome/reports
 
       - run:
           name: Run lighthouse against staging deployment
           command: |
-            docker run -it --rm --cap-add=SYS_ADMIN \
-              -v reports:/home/chrome/reports \
-              --entrypoint=/bin/bash kporras07/lighthouse-ci \
-              -c "lighthouse https://dqenrys909x8o.cloudfront.net --port=9222 --chrome-flags=\"--headless\" --output-path=/home/chrome/reports/run --output=json --output=html"
-      - run: ls -al ./reports
+            lighthouse https://dqenrys909x8o.cloudfront.net --port=9222 --chrome-flags=\"--headless\" \
+            --output-path=/home/chrome/reports/run --output=json --output=html
+      - run: ls -al /home/chrome/reports
       - run:
           name: Analyze lighthouse scores vs requirements
           command: ./script/analyze_scores.js package.json reports/run.report.json 
