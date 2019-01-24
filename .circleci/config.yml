@@ -91,8 +91,6 @@ jobs:
           name: Analyze and report desired vs actual lighthouse scores
           command: ./script/analyze_scores.js package.json reports
 
-      - run: docker run rainforestapp/circlemator comment 'A totally unnecessary comment' --base-branch=master
-
 
 workflows:
   version: 2
