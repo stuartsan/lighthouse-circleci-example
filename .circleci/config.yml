@@ -53,7 +53,7 @@ jobs:
     working_directory: ~/repo
 
     steps:
-      - pwd
+      - run: pwd
       - checkout
 
       - run:
