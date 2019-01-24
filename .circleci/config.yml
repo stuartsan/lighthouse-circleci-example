@@ -48,7 +48,7 @@ jobs:
       # - run: ~/.yarn/bin/amplify env checkout staging
       # - run: ~/.yarn/bin/amplify publish -y
   perfTests:
-    parallelism: 2
+    parallelism: 3
 
     docker:
       - image: kporras07/lighthouse-ci
@@ -85,7 +85,7 @@ jobs:
 
       - run:
           name: Analyze desired vs actual lighthouse scores
-          command: ls reports # ./script/analyze_scores.js package.json reports/run.report.json 
+          command: ./script/analyze_scores.js package.json reports
 
 workflows:
   version: 2

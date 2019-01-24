@@ -1,22 +1,50 @@
 #!/usr/local/bin/node
 
 const fs = require('fs');
+const path = require('path');
 
 const pkg = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
 const requiredScores = pkg.lighthouse.requiredScores;
-const actualScores = JSON.parse(fs.readFileSync(process.argv[3], 'utf8'));
+
+const actualScores = [];
+
+fs.readdirSync(process.argv[3]).forEach(file => {
+  if (path.extname(file) === '.json') {
+    actualScores.push(JSON.parse(fs.readFileSync(path.resolve(process.argv[3], file), 'utf8')));
+  }
+})
+
 
 let success = true;
 
-Object.keys(requiredScores).forEach(requirement => {
-  const requiredOutOf100 = requiredScores[requirement];
-  const actualOutOf100 = actualScores.categories[requirement].score * 100;
+const scoresAcrossRunsByCategory = actualScores.reduce((acc, run) => {
+  Object.keys(requiredScores).forEach(category => {
+    acc[category] = acc[category] || [];
+    acc[category].push(run.categories[category].score * 100);
+  });
+  return acc;
+}, {});
 
-  if (actualOutOf100 < requiredScores[requirement]) {
-    console.log(`❌Failure: required score for ${requirement} is ${requiredOutOf100}, got ${actualOutOf100}`);
+console.log('------------------------------------------');
+console.log(`Number of parallel test runs: ${actualScores.length}`);
+console.log('------------------------------------------');
+
+Object.keys(requiredScores).forEach(category => {
+  const requiredOutOf100 = requiredScores[category];
+  const actualBestOutOf100 = Math.max.apply(null, scoresAcrossRunsByCategory[category]);
+
+  if (actualBestOutOf100 < requiredScores[category]) {
+    console.log(`❌ ${category}: ${actualBestOutOf100}/${requiredOutOf100}`);
     success = false;
   } else {
-    console.log(`✅Target score for ${requirement} is ${requiredOutOf100}, got ${actualOutOf100}`);
+    console.log(`✅ ${category}: ${actualBestOutOf100}/${requiredOutOf100}`);
+  }
+
+  const areAllScoresEqual = scoresAcrossRunsByCategory[category]
+    .every((val, i, arr) => val === scoresAcrossRunsByCategory[category][0]);
+
+  if (!areAllScoresEqual) {
+    console.log(`   - scores varied across runs: [${scoresAcrossRunsByCategory[category].join(' ')}]`)
   }
 });
 
