@@ -56,6 +56,7 @@ const prComment = [];
   prComment.push(
     `<h2>Lighthouse scores (${userType})</h2>`,
     `<p>Parallel runs: <strong>${reports[userType].json.length}</strong>. Best scores shown.</p>`,
+    '<p>'
   );
 
   Object.keys(requiredScores).forEach(category => {
@@ -90,6 +91,10 @@ const prComment = [];
       );
     }
   });
+
+  prComment.push(
+    '</p>'
+  );
 
   const reportLinks = reports[userType].htmlFilenames.map((filename, idx) => {
     let link = bot.artifactLink(`reports/${filename}`, `run ${idx + 1}`);

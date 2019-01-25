@@ -3,7 +3,7 @@ const Audit = require("/usr/local/lib/node_modules/lighthouse").Audit;
 class LoadAudit extends Audit {
   static get meta() {
     return {
-      id: "bundlesize-audit",
+      id: "bundle-size-audit",
       title: "JS bundle size",
       failureTitle: `JS bundle exceeds your threshold of ${
         process.env.MAX_BUNDLE_SIZE_KB
