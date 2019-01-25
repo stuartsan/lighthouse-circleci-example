@@ -22,7 +22,7 @@ jobs:
 
       - run: 
           name: Prune unnecessary stuff from node_modules 
-          command: curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | bash  && ./bin/node-prune
+          command: yarn autoclean --force
 
       - save_cache:
           paths:
