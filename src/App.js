@@ -13,7 +13,7 @@ const Index = () => (
   <div className="center-align">
     <h2>"k8s for k9s"</h2>
     <p className="flow-text">
-      Premium kube training videos for (hu)man's best friend
+      PREMIUM kube training videos for (hu)man's best friend
     </p>
     <img
       src={dog}
