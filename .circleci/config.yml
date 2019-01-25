@@ -109,7 +109,7 @@ jobs:
           command: |
             MAX_BUNDLE_SIZE_KB="$(node -p 'require("./package.json").lighthouse.maxBundleSizeKb')" \
             JS_BUNDLE_REGEX="$(node -p 'require("./package.json").lighthouse.jsBundleRegex')" \
-            lighthouse $TEST_URL
+            lighthouse $TEST_URL \
               --config-path=./lighthouse-config/custom-config-authenticate.js \
               --port=9222 \
               --chrome-flags=\"--headless\" \
