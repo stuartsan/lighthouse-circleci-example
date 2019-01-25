@@ -55,7 +55,7 @@ const prComment = [];
 
   prComment.push(
     `<h2>Lighthouse scores (${userType})</h2>`,
-    `<p>Parallel runs: <strong>${reports[userType].json.length}</strong>. Best scores shown.</p>`,
+    `<p>Best scores across <strong>${reports[userType].json.length}</strong> parallel runs:</p>`,
     '<p>'
   );
 
@@ -76,18 +76,6 @@ const prComment = [];
       ciStdout.push(`✅ ${category}: ${actualBestOutOf100}/${requiredOutOf100}`);
       prComment.push(
         `<strong>✅ ${category}:</strong> ${actualBestOutOf100}/${requiredOutOf100}<br />`
-      );
-    }
-
-    const areAllScoresEqual = scoresAcrossRunsByCategory[category].every(
-      (val, i, arr) => val === scoresAcrossRunsByCategory[category][0]
-    );
-
-    if (!areAllScoresEqual) {
-      ciStdout.push(
-        `   - scores varied across runs: [${scoresAcrossRunsByCategory[
-          category
-        ].join(" ")}]`
       );
     }
   });
