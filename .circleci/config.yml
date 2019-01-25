@@ -75,8 +75,8 @@ jobs:
       - run:
           name: Run lighthouse against staging deployment
           command: |
-            MAX_BUNDLE_SIZE_KB=$(node -p "require('./package.json').lighthouse.maxBundleSizeKb") \
-            JS_BUNDLE_REGEX=$(node -p "require('./package.json').lighthouse.jsBundleRegex") \
+            MAX_BUNDLE_SIZE_KB="$(node -p 'require("./package.json").lighthouse.maxBundleSizeKb')" \
+            JS_BUNDLE_REGEX="$(node -p 'require("./package.json").lighthouse.jsBundleRegex')" \
             lighthouse https://staging.kubernetesfordogs.com \
               --config-path=./lighthouse-config/custom-config.js \
               --port=9222 \
