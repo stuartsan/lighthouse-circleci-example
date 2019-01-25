@@ -55,8 +55,7 @@ const prComment = [];
 
   prComment.push(
     `<h2>Lighthouse scores (${userType})</h2>`,
-    `<p><strong>Number of parallel test runs:</strong> ${reports[userType].json.length}</p>`,
-    `<p>The best scores across all runs are shown below.</p>`
+    `<p>Parallel runs: <strong>${reports[userType].json.length}</strong>. Best scores shown.</p>`,
   );
 
   Object.keys(requiredScores).forEach(category => {
@@ -69,13 +68,13 @@ const prComment = [];
     if (actualBestOutOf100 < requiredScores[category]) {
       ciStdout.push(`❌ ${category}: ${actualBestOutOf100}/${requiredOutOf100}`);
       prComment.push(
-        `<h4>❌ ${category}: ${actualBestOutOf100}/${requiredOutOf100}</h4>`
+        `<strong>❌ ${category}:</strong> ${actualBestOutOf100}/${requiredOutOf100}<br />`
       );
       success = false;
     } else {
       ciStdout.push(`✅ ${category}: ${actualBestOutOf100}/${requiredOutOf100}`);
       prComment.push(
-        `<h4>✅ ${category}: ${actualBestOutOf100}/${requiredOutOf100}</h4>`
+        `<strong>✅ ${category}:</strong> ${actualBestOutOf100}/${requiredOutOf100}<br />`
       );
     }
 
@@ -89,24 +88,16 @@ const prComment = [];
           category
         ].join(" ")}]`
       );
-      prComment.push(
-        `<p><em>Scores varied across runs: [${scoresAcrossRunsByCategory[
-          category
-        ].join(" ")}]</em></p>`
-      );
     }
   });
 
-  prComment.push("<h3>Detailed reports</h3>");
-  prComment.push("<p>");
   const reportLinks = reports[userType].htmlFilenames.map((filename, idx) => {
-    let link = bot.artifactLink(`reports/${filename}`, `Run ${idx + 1}`);
+    let link = bot.artifactLink(`reports/${filename}`, `run ${idx + 1}`);
     // LMAO -- this bot is making some assumptions about file path
     // that I can't easily override so w/e
     return link.replace("/home/circleci/project", "");
   });
-  prComment.push(reportLinks.join(", "));
-  prComment.push("</p>");
+  prComment.push(`<p><strong>Detailed reports</strong>: ${reportLinks.join(", ")}</p>`);
 });
 
 
