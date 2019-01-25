@@ -37,6 +37,6 @@
       "bundlesize": 100
     },
     "maxBundleSizeKb": 250,
-    "jsBundleRegex": "/static/js/[^(main)].*chunk\.js"
+    "jsBundleRegex": "\/static\/js\/[^(main)].*chunk\\.js"
   }
 }

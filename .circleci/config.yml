@@ -75,9 +75,16 @@ jobs:
       - run:
           name: Run lighthouse against staging deployment
           command: |
-            lighthouse https://staging.kubernetesfordogs.com --port=9222 --chrome-flags=\"--headless\" \
-            --output-path=/home/chrome/reports/run-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
-            --output=json --output=html --quiet
+            MAX_BUNDLE_SIZE_KB=$(node -p "require('./package.json').lighthouse.maxBundleSizeKb") \
+            JS_BUNDLE_REGEX=$(node -p "require('./package.json').lighthouse.jsBundleRegex") \
+            lighthouse https://staging.kubernetesfordogs.com \
+              --config-path=./lighthouse-config/custom-config.js \
+              --port=9222 \
+              --chrome-flags=\"--headless\" \
+              --output-path=/home/chrome/reports/run-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
+              --output=json \
+              --output=html \
+              --quiet
 
 
       - persist_to_workspace:
