@@ -141,12 +141,8 @@ jobs:
             - reports
 
   # Run Lighthouse against staging deployment -- authenticated user hitting 
-  # the app's dashboard page. The only things different between this and
-  # the previous job are: 1) different TEST_URL, 2) different custom config
-  # passed into --config-path, and 3) the report filenames contain `authenticated`
-  # instead of `anonymous`. The different custom config is where we plug in the
-  # authentication step: we use a custom gatherer to have puppeteer perform
-  # the login. For more detail, see the `*authenticate*` files in lighthouse-config/
+  # the app's dashboard page. This is basically the same as the previous job
+  # with some tweaks, which are commented on below.
   perfTestsAuthenticated:
     parallelism: 2
 
@@ -156,17 +152,30 @@ jobs:
     steps:
       - checkout
 
+      # Restore node_modules because we need puppeteer
+      # (again, our caching strategy around node_modules could probably be
+      # way more optimized, but for now it gets the job done.)
+      - restore_cache:
+          keys:
+            - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
       - run:
           name: Run lighthouse against staging deployment, authenticated user
           environment:
+            # Different TEST_URL to reflect the authenticated page
             TEST_URL: https://staging.kubernetesfordogs.com/dashboard
           command: |
             MAX_BUNDLE_SIZE_KB="$(node -p 'require("./package.json").lighthouse.maxBundleSizeKb')" \
             JS_BUNDLE_REGEX="$(node -p 'require("./package.json").lighthouse.jsBundleRegex')" \
             lighthouse $TEST_URL \
+              # Different custom config file
+              # This is where we plug in the authentication step: we use a 
+              # custom gatherer to have puppeteer perform the login. 
+              # For more detail, see the `*authenticate*` files in lighthouse-config/
               --config-path=./lighthouse-config/custom-config-authenticate.js \
               --port=9222 \
               --chrome-flags=\"--headless\" \
+              # The report filenames contain `authenticated` instead of `anonymous`
               --output-path=/home/chrome/reports/authenticated-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
               --output=json \
               --output=html
@@ -187,7 +196,7 @@ jobs:
     steps:
       - checkout
 
-      # (again, or caching strategy around node_modules could probably be
+      # (again, our caching strategy around node_modules could probably be
       # way more optimized, but for now it gets the job done.)
       - restore_cache:
           keys:
