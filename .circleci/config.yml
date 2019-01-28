@@ -103,35 +103,40 @@ jobs:
 
       - run:
           name: Run lighthouse against staging deployment
+
           # Set TEST_URL as an environment variable so that our custom config
           # file (see below) can know about it
           environment:
             TEST_URL: https://staging.kubernetesfordogs.com
+
+          # - Extract max JS bundle size, as well as a regular expression that
+          #   identifies our main JS bundle, from their definitions in `package.json`.
+          #   Store them in environment variables so that our custom confg
+          #   can reference them.
+          #
+          # - Invoke `lighthouse`, passing in a custom config file via --config-path.
+          #   The config file is how we include our custom audit.
+          #
+          # - The container is defined to run as user `chrome` (side note, can't run
+          #   Chrome browser as root!) We store the Lighthouse reports in user 
+          #   `chrome`'s home directory via the --output-path.
+          #
+          # - Also via --output-path, the reports will have in their file 
+          #   name `anonymous` (as opposed to authenticated) and a checksum 
+          #   of a unique value from the container where they were executed 
+          #
+          # - We use --output to get reports in html, so people can view them, 
+          #   AND json, so we can extract scores from them programmatically.
           command: |
-            # Extract max JS bundle size, as well as a regular expression that
-            # identifies our main JS bundle, from their definitions in `package.json`.
-            # Store them in environment variables so that our custom confg
-            # can reference them.
             MAX_BUNDLE_SIZE_KB="$(node -p 'require("./package.json").lighthouse.maxBundleSizeKb')" \
             JS_BUNDLE_REGEX="$(node -p 'require("./package.json").lighthouse.jsBundleRegex')" \
-            # Invoke lighthouse
             lighthouse $TEST_URL \
-              # With our custom config file (which then includes a custom audit)
               --config-path=./lighthouse-config/custom-config.js \
               --port=9222 \
               --chrome-flags=\"--headless\" \
-              # The container is run as user `chrome`. 
-              # (Side note: Chrome won't run as root). 
-              # We store the Lighthouse reports in user `chrome`'s home directory.
-              # The reports will have in their file name `anonymous` 
-              # (as opposed to authenticated) as well as a checksum of a unique
-              # value from the container where they were executed 
               --output-path=/home/chrome/reports/anonymous-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
-              # We want reports in html, so people can view them, AND json, so
-              # we can extract scores from them programmatically.
               --output=json \
               --output=html
-
 
       # Save the reports just generated in a place where the _next job_ in the
       # workflow can snag them all and do analysis on them. 
@@ -141,8 +146,8 @@ jobs:
             - reports
 
   # Run Lighthouse against staging deployment -- authenticated user hitting 
-  # the app's dashboard page. This is basically the same as the previous job
-  # with some tweaks, which are commented on below.
+  # the app's dashboard page. The only things different between this and
+  # the previous job are commented on below.
   perfTestsAuthenticated:
     parallelism: 2
 
@@ -152,34 +157,36 @@ jobs:
     steps:
       - checkout
 
-      # Restore node_modules because we need puppeteer
-      # (again, our caching strategy around node_modules could probably be
-      # way more optimized, but for now it gets the job done.)
-      - restore_cache:
-          keys:
-            - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+      # We need one additional node module; storing it with the rest and trying 
+      # to `restore_cache` again doesn't really work cause the directory 
+      # structure and permissions are different here than the container where 
+      # that stuff was cached; highlights a limit of how we're using the cache 
+      # for node modules :p
+      - run: npm install puppeteer
 
       - run:
           name: Run lighthouse against staging deployment, authenticated user
+
           environment:
-            # Different TEST_URL to reflect the authenticated page
+            # Different url, for the authenticated page
             TEST_URL: https://staging.kubernetesfordogs.com/dashboard
+
+          # Different custom config file passed into --config-path, and
+          # the report filenames contain `authenticated` instead of `anonymous`.
+          # The different custom config is where we plug in the
+          # authentication step: we use a custom gatherer to have puppeteer 
+          # perform the login. For more detail, see the `*authenticate*` 
+          # files in lighthouse-config/
           command: |
             MAX_BUNDLE_SIZE_KB="$(node -p 'require("./package.json").lighthouse.maxBundleSizeKb')" \
             JS_BUNDLE_REGEX="$(node -p 'require("./package.json").lighthouse.jsBundleRegex')" \
             lighthouse $TEST_URL \
-              # Different custom config file
-              # This is where we plug in the authentication step: we use a 
-              # custom gatherer to have puppeteer perform the login. 
-              # For more detail, see the `*authenticate*` files in lighthouse-config/
               --config-path=./lighthouse-config/custom-config-authenticate.js \
               --port=9222 \
               --chrome-flags=\"--headless\" \
-              # The report filenames contain `authenticated` instead of `anonymous`
               --output-path=/home/chrome/reports/authenticated-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
               --output=json \
               --output=html
-
 
       - persist_to_workspace:
           root: /home/chrome
@@ -196,7 +203,7 @@ jobs:
     steps:
       - checkout
 
-      # (again, our caching strategy around node_modules could probably be
+      # (again, or caching strategy around node_modules could probably be
       # way more optimized, but for now it gets the job done.)
       - restore_cache:
           keys:
@@ -226,7 +233,6 @@ jobs:
       - run:
           name: Analyze and report desired vs actual lighthouse scores
           command: ./ci-scripts/analyze_scores.js package.json reports
-
 
 workflows:
   version: 2
