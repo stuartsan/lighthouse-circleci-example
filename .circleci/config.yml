@@ -1,8 +1,11 @@
 version: 2
 jobs:
-  # Download and cache dependencies
+  # Install node dependencies.
   nodeModules:
     docker:
+      # Execute this job within a nodejs convenience image provided by CircleCI.
+      # This is basically the official node docker image plus a few additional
+      # tools commonly useful in a CI environment (git, ssh, tar, curl, etc.)
       - image: circleci/node:10.15.0
 
     steps:
