@@ -43,7 +43,7 @@ jobs:
 
       # Clean unnecessary files -- markdown, typescript, etc -- from node_modules.
       # We are going to cache node_modules in a moment and this will make
-      # that go faster both when caching and restoring the cache.
+      # that go faster both when writing to and reading from the cache.
       - run: 
           command: yarn autoclean --force
 
