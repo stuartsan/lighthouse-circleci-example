@@ -1,7 +1,66 @@
 version: 2
 jobs:
-  # Download and cache dependencies
+  # Install node dependencies.
   nodeModules:
+    docker:
+      # Execute this job within a nodejs convenience image provided by CircleCI.
+      # This is basically the official node docker image plus a few additional
+      # tools commonly useful in a CI environment (git, ssh, tar, curl, etc.)
+      - image: circleci/node:10.15.0
+
+    steps:
+      # Fetch the github repo. Subsequent commands will be run within the root
+      # directory of the repo.
+      - checkout
+
+       # AMPLIFY-SPECIFIC: we need to install the amplify cli globally
+       # because the beta amplify multi-env package we are using will otherwise
+       # explode. To avoid permissions issues we set it so that global node
+       # modules are located within $HOME.
+      - run: yarn config set prefix ~/.yarn
+
+      # If we have already run this job with the exact same package.json and
+      # yarn.lock and cached its results, fetch those node modules from the cache. 
+      # This way when we do `yarn` below, nothing will happen; stuff is already 
+      # up to date. Why not just yarn.lock? I added package.json too so I can 
+      # increment a number in that file to bust the cache while building the 
+      # pipeline.
+      - restore_cache:
+          keys:
+            - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
+      # AMPLIFY-SPECIFIC: I would have thought I could just do:
+      # `yarn global add @aws-amplify/cli@multienv` and this would perform
+      # no extra work if amplify were _already_ installed globally. But alas,
+      # some stuff was still happening (not sure about fetching, but at least linking)
+      # and it was slowing things down on every run, so we just manually check if
+      # amplify is in the house.
+      - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
+
+      # Install dependencies based on yarn.lock. Ensure that yarn.lock
+      # is not updated.
+      - run: yarn --frozen-lockfile
+
+      # Clean unnecessary files -- markdown, typescript, etc -- from node_modules.
+      # We are going to cache node_modules in a moment and this will make
+      # that go faster both when writing to and reading from the cache.
+      - run: 
+          command: yarn autoclean --force
+
+      # Cache freshly installed node_modules for this package.json/yarn.lock combo.
+      # If the cache has already been saved for this cache `key`, nothing happens.
+      # AMPLIFY-SPECIFIC: caching of the global node modules in ~./yarn and 
+      # ~/.config/yarn (the former symlinks to the latter, we must specify both.)
+      - save_cache:
+          paths:
+            - node_modules
+            - ~/.yarn 
+            - ~/.config/yarn
+          key: node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+
+  # Build and deploy application to Cloudfront. It is pretty much
+  # all AMPLIFY-SPECIFIC.
+  deployToStaging:
     docker:
       - image: circleci/node:10.15.0
 
@@ -10,52 +69,32 @@ jobs:
 
       - run: yarn config set prefix ~/.yarn
 
+      # Fetch node_modules from the cache. Note: we are using the CircleCI 
+      # cache here but it would probably be more optimal to use the Workspace
+      # to pass the installed node_modules across sequential jobs in the same
+      # Workflow.
       - restore_cache:
           keys:
             - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
 
-      - run: "if [ -e $HOME/.yarn/bin/amplify ]; then echo 'amplify already installed globally, skipping'; else yarn global add @aws-amplify/cli@multienv; fi"
+      # amplify doesn't presently support AWS creds as environment variables, so
+      # we write ~/.aws/credentials based on environment variables we have set
+      # manually in CircleCI. ok sure.
+      - run: ./ci-scripts/write_aws_creds_file.sh
+      - run: ./ci-scripts/amplify_init.sh
+      - run: ~/.yarn/bin/amplify env checkout staging
+      - run: ~/.yarn/bin/amplify publish -y --invalidateCloudFront
 
-      - run: yarn
-
-      - run: 
-          name: Prune unnecessary stuff from node_modules 
-          command: yarn autoclean --force
-
-      - save_cache:
-          paths:
-            - node_modules
-            # capture globally installed amplify CLI...it doesn't work
-            # when executing it locally via node_modules/.bin/amplify so w/e 
-            - ~/.yarn 
-            # previous one symlinks into here
-            - ~/.config/yarn
-          key: node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
-
-  deployToStaging:
-    docker:
-      - image: circleci/node:10.15.0
-
-    steps:
-      - run: echo 'Skipping deploy for faster iteration, brb'
-
-      # - checkout
-
-      # - run: yarn config set prefix ~/.yarn
-
-      # - restore_cache:
-      #     keys:
-      #       - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
-
-      # # amplify doesn't presently support creds as environment variables so
-      # # we write ~/.aws/credentials based on environment variables. ok sure
-      # - run: ./ci-scripts/write_aws_creds_file.sh
-      # - run: ./ci-scripts/amplify_init.sh
-      # - run: ~/.yarn/bin/amplify env checkout staging
-      # - run: ~/.yarn/bin/amplify publish -y --invalidateCloudFront
+  # Run Lighthouse against staging deployment -- anonymous user hitting 
+  # the app's home page
   perfTests:
+    # Number of parallel Lighthouse runs against this url. Why more than one?
+    # Some perf metrics vary across runs based on backend flakiness, etc, and 
+    # this way we can extract a best score or median across runs.
     parallelism: 2
 
+    # Sadly there is currently no official lighthouse docker image. But
+    # it is on their radar github.com/GoogleChrome/lighthouse/issues/3715
     docker:
       - image: kporras07/lighthouse-ci
 
@@ -64,8 +103,30 @@ jobs:
 
       - run:
           name: Run lighthouse against staging deployment
+
+          # Set TEST_URL as an environment variable so that our custom config
+          # file (see below) can know about it
           environment:
             TEST_URL: https://staging.kubernetesfordogs.com
+
+          # - Extract max JS bundle size, as well as a regular expression that
+          #   identifies our main JS bundle, from their definitions in `package.json`.
+          #   Store them in environment variables so that our custom confg
+          #   can reference them.
+          #
+          # - Invoke `lighthouse`, passing in a custom config file via --config-path.
+          #   The config file is how we include our custom audit.
+          #
+          # - The container is defined to run as user `chrome` (side note, can't run
+          #   Chrome browser as root!) We store the Lighthouse reports in user 
+          #   `chrome`'s home directory via the --output-path.
+          #
+          # - Also via --output-path, the reports will have in their file 
+          #   name `anonymous` (as opposed to authenticated) and a checksum 
+          #   of a unique value from the container where they were executed 
+          #
+          # - We use --output to get reports in html, so people can view them, 
+          #   AND json, so we can extract scores from them programmatically.
           command: |
             MAX_BUNDLE_SIZE_KB="$(node -p 'require("./package.json").lighthouse.maxBundleSizeKb')" \
             JS_BUNDLE_REGEX="$(node -p 'require("./package.json").lighthouse.jsBundleRegex')" \
@@ -77,12 +138,16 @@ jobs:
               --output=json \
               --output=html
 
-
+      # Save the reports just generated in a place where the _next job_ in the
+      # workflow can snag them all and do analysis on them. 
       - persist_to_workspace:
           root: /home/chrome
           paths:
             - reports
 
+  # Run Lighthouse against staging deployment -- authenticated user hitting 
+  # the app's dashboard page. The only things different between this and
+  # the previous job are commented on below.
   perfTestsAuthenticated:
     parallelism: 2
 
@@ -92,12 +157,26 @@ jobs:
     steps:
       - checkout
 
+      # We need one additional node module; storing it with the rest and trying 
+      # to `restore_cache` again doesn't really work cause the directory 
+      # structure and permissions are different here than the container where 
+      # that stuff was cached; highlights a limit of how we're using the cache 
+      # for node modules :p
       - run: npm install puppeteer
 
       - run:
           name: Run lighthouse against staging deployment, authenticated user
+
           environment:
+            # Different url, for the authenticated page
             TEST_URL: https://staging.kubernetesfordogs.com/dashboard
+
+          # Different custom config file passed into --config-path, and
+          # the report filenames contain `authenticated` instead of `anonymous`.
+          # The different custom config is where we plug in the
+          # authentication step: we use a custom gatherer to have puppeteer 
+          # perform the login. For more detail, see the `*authenticate*` 
+          # files in lighthouse-config/
           command: |
             MAX_BUNDLE_SIZE_KB="$(node -p 'require("./package.json").lighthouse.maxBundleSizeKb')" \
             JS_BUNDLE_REGEX="$(node -p 'require("./package.json").lighthouse.jsBundleRegex')" \
@@ -109,12 +188,14 @@ jobs:
               --output=json \
               --output=html
 
-
       - persist_to_workspace:
           root: /home/chrome
           paths:
             - reports
 
+  # Analyze all the reports, decide if we should pass or fail, and
+  # report back with a comment on the PR that provides A) the scores and
+  # B) links to the html reports for all the test runs.
   processResults:
     docker:
       - image: circleci/node:10.15.0
@@ -122,29 +203,39 @@ jobs:
     steps:
       - checkout
 
+      # (again, or caching strategy around node_modules could probably be
+      # way more optimized, but for now it gets the job done.)
       - restore_cache:
           keys:
             - node-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
 
+      # Mount the workspace (which contains all our reports) into this
+      # container. The reports are subsequently available at ./reports/
       - attach_workspace:
           at: "."
 
+      # Store the html and json reports in S3 as long-term artifacts associated 
+      # with this job. Then, we can easily send links to the html reports in the
+      # PR comment. 
       - store_artifacts:
           path: reports
           destination: reports
 
+      # Compare our desired goals, expressed in the `lighthouse` section of
+      # `package.json`, against the actual test results. Right now we simply
+      # use the _best score_ across all runs for each category. If we want
+      # to fail the job, and consequently fail the workflow, the script exits 
+      # with a nonzero exit code.
+      #
+      # Finally, we post a comment to GH. Because we enabled GH "checks integration"
+      # on the CircleCI side, the PR status will automatically be set to
+      # pass/fail based on whether this workflow passes or fails.
       - run:
           name: Analyze and report desired vs actual lighthouse scores
           command: ./ci-scripts/analyze_scores.js package.json reports
 
-
 workflows:
   version: 2
-  # at first we will deploy everything but really this should be just for
-  # PRs against master; uncomment this.
-  # branches:
-  #   ignore:
-  #     - master
   deployToStagingAndTest:
     jobs:
       - nodeModules
