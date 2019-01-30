@@ -136,7 +136,8 @@ jobs:
               --chrome-flags=\"--headless\" \
               --output-path=/home/chrome/reports/anonymous-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
               --output=json \
-              --output=html
+              --output=html \
+              --disable-storage-reset
 
       # Save the reports just generated in a place where the _next job_ in the
       # workflow can snag them all and do analysis on them. 
@@ -186,7 +187,8 @@ jobs:
               --chrome-flags=\"--headless\" \
               --output-path=/home/chrome/reports/authenticated-"$(echo -n $CIRCLE_SHELL_ENV | md5sum | awk '{print $1}')" \
               --output=json \
-              --output=html
+              --output=html \
+              --disable-storage-reset
 
       - persist_to_workspace:
           root: /home/chrome
