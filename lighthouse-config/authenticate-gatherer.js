@@ -26,10 +26,6 @@ class Authenticate extends Gatherer {
     // this means the login succeeded
     await page.waitForSelector('.dashboard');
 
-    // cause i don't want to log in, load assets, and then have them be cached
-    // when lighthouse visits this page.
-    // await page.setCacheEnabled(false);
-
     browser.disconnect();
     return {};
   }
