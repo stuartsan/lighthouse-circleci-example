@@ -15,11 +15,13 @@ const Index = () => (
     <p className="flow-text">
       Premium kube training videos for (hu)man's best friend
     </p>
-    <img
-      src={dog}
-      className="z-depth-2"
-      alt="Literal dog steering the metaphorical ship of container orchestration"
-    />
+    <p>
+      <img
+        src={dog}
+        className="z-depth-2 responsive-img"
+        alt="Literal dog steering the metaphorical ship of container orchestration"
+      />
+    </p>
   </div>
 );
 

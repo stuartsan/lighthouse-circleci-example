@@ -13,5 +13,12 @@ h1 a {
 }
 
 nav .brand-logo {
-  padding-left: 1em;
+  font-size: 1.2rem;
+}
+
+@media only screen and (min-width: 601px) {
+  nav .brand-logo {
+    padding-left: 1em;
+    font-size: 2.1rem;
+  }
 }
