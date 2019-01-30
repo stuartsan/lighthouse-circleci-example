@@ -23,13 +23,12 @@ class Authenticate extends Gatherer {
     // lmao
     await page.click('span[class^=Section__sectionFooterPrimaryContent] button');
 
-    // one imagines this should be more than long enough for the cognito request
-    // to happen
-    await page.waitFor(3*1000);
+    // this means the login succeeded
+    await page.waitForSelector('.dashboard');
 
     // cause i don't want to log in, load assets, and then have them be cached
-    // when lighthouse visits this page
-    await page.setCacheEnabled(false);
+    // when lighthouse visits this page.
+    // await page.setCacheEnabled(false);
 
     browser.disconnect();
     return {};

@@ -41,7 +41,7 @@ class Dashboard extends Component {
     }
 
     return (
-      <ul className="row">
+      <ul className="dashboard row">
         {this.state.hits.map(item => (
           <li className="" key={item.objectID}>
             <div className="col s12 m3">
