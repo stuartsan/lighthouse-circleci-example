@@ -503,7 +503,8 @@ module.exports = function(webpackEnv) {
         new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/runtime~.+[.]js/]),
 
       isEnvProduction && new CompressionPlugin({
-        test: [/\.js(\?.*)?$/i, /\.css(\?.*)?$/i]
+        test: [/\.js(\?.*)?$/i, /\.css(\?.*)?$/i],
+        filename: '[path][query]'
       }),
       // Makes some environment variables available in index.html.
       // The public URL is available as %PUBLIC_URL% in index.html, e.g.:
